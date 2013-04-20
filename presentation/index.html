@@ -48,13 +48,34 @@
 				<section>
 					<h3>Konular</h3>
 					<ul>
+						<li class="fragment">Ornek Dosya Uygulamaları</li>
 						<li class="fragment">EFB Projesi</li>
 						<li class="fragment">Basit Dosya İşlemleri</li>
 						<li class="fragment">Multithread iOS</li>
+						<li class="fragment">Zip Islemleri</li>
 						<li class="fragment">Online Dosya Yükleme</li>
 						<li class="fragment">Offline Dosya Yükleme</li>
 						<li class="fragment">Sonuç</li>
 					</ul>
+				</section>
+
+				<section>
+					<section>
+						<h3>Dropbox</h3>
+						<img src="img/dropbox_ss.png" width="800" height="600">
+					</section>
+					<section>
+						<h3>Evernote</h3>
+						<img src="img/evernote_ss.png" width="800" height="600">
+					</section>
+					<section>
+						<h3>GoodReader</h3>
+						<img src="img/goodreader_ss.jpg" width="800" height="600">
+					</section>
+					<section>
+						<h3>WinZip</h3>
+						<img src="img/winzip_ss.jpg" width="800" height="600">
+					</section>
 				</section>
 
 				<section>
@@ -149,9 +170,6 @@ do{
 						<p>PSStackedView</p>
 						<img src="img/psstackedview_ss.png" width="700" height="500">
 					</section>
-					<section>
-						<h3>Demo</h3>
-					</section>
 				</section>
 
 				<section>
@@ -198,25 +216,111 @@ backgroundQueue = dispatch_queue_create("com.mobilist.dataRead.bqueue", NULL);</
     [delegate dataAvailable:data];
 });</code></pre>
 					</section>
+				</section>
+
+				<section>
 					<section>
-						<h3>Demo</h3>
+						<h3>Zip Islemleri</h3>
+						<p>iOS'ta Zip Işlemleri MiniZip ve ZipArchive kütüphaneriyle kolayca gerçekleşmektedir.</p>
+						<p>Dosya Sıkıştırma Işlemleri</p>
+						<pre><code>NSArray *paths = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES);
+NSString *documentsDirectory = [paths objectAtIndex:0];
+NSString *tmpPathToFile  = [documentsDirectory stringByAppendingPathComponent:@"mobilist1.png"];
+NSString *zipFileTo = [documentsDirectory stringByAppendingPathComponent:@"mobilist.zip"];
+ZipArchive *zip = [[ZipArchive alloc] init];
+BOOL result = [zip CreateZipFile2:zipFileTo];
+ret = [zip addFileToZip:tmpPathToFile newname:@"mobilist2.png"];
+BOOL success = [zip CloseZipFile2];</code></pre>
+					</section>
+					<section>
+						<h3>Zip Islemleri</h3>
+						<p>Dosyaları Çıkartmak</p>
+						<pre><code>NSString *filepath = [[NSBundle mainBundle] pathForResource:@"mobilist" ofType:@"zip"];
+ZipArchive *zipArchive = [[ZipArchive alloc] init];
+[zipArchive UnzipOpenFile:filepath Password:@"12345"];
+[zipArchive UnzipFileTo:pathToDirectory overWrite:YES];
+[zipArchive UnzipCloseFile];</code></pre>
 					</section>
 				</section>
 
 				<section>
-					<h3>Online Dosya Yükleme</h3>
+					<section>
+						<h3>Online Dosya Yükleme</h3>
+						<p>Herhangi bir web kaynağından iOS tarafına dosya aktarımı birden çok yolla gerçekleşebilir</p>
+						<ul>
+							<li class="fragment">CFNetwork (iOS)</li>
+							<li class="fragment">NSURLRequest (iOS)</li>
+							<li class="fragment">AFNetworking (Matt & Scott)</li>
+						</ul>
+					</section>
+					<section>
+						<h3>NSURLRequest</h3>
+						<p>Dosya Yükleme</p>
+						<p>Öncelikle NSURLConnection oluşturalım</p>
+						<pre><code>NSMutableURLRequest *theRequest = [NSMutableURLRequest 
+	requestWithURL:reqURL];
+NSURLConnection *theConnection = [[NSURLConnection alloc] 
+	initWithRequest:theRequest delegate:self];</code></pre>
+						<p>didReceiveData metodunu tamamlayalım</p>
+						<pre><code>[receivedData appendData:data];
+unsigned char byteBuffer[[receivedData length]];
+[receivedData getBytes:byteBuffer];
+NSInteger receivedLen = [data length];
+bytesReceived = (bytesReceived + receivedLen);</code></pre>
+					</section>
+					<section>
+						<h3>NSURLRequest</h3>
+						<p>Ve son olarak bağlantımızı connectionDidFinishLoading metoduyla bitirelim</p>
+						<pre><code>NSArray *paths = NSSearchPathForDirectoriesInDomains
+	(NSDocumentDirectory, NSUserDomainMask, YES);
+NSString *documentsDirectory = [paths objectAtIndex:0];
+NSString *pdfPath = [documentsDirectory 
+	stringByAppendingPathComponent:@"mobilist.txt"];
+unsigned char byteBuffer[[receivedData length]];
+[receivedData getBytes:byteBuffer];
+[self.receivedData  writeToFile:pdfPath atomically:YES];</code></pre>
+					</section>
+					<section>
+						<h3>AFNetworking</h3>
+						<p>Dosya Yükleme</p>
+						<p>Öncelikle Bağlantı bilgilerimizi oluşturalım</p>
+						<pre><code>NSURLRequest *request = [NSURLRequest 
+	requestWithURL:[NSURL URLWithString:@"..."]];
+AFHTTPRequestOperation *operation = [[[AFHTTPRequestOperation alloc] 
+	initWithRequest:request] autorelease];</pre></code>
+						<p>Dosya Işlemini Tamamlayalım</p>
+<pre><code>NSArray *paths = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES);
+NSString *path = [[paths objectAtIndex:0] stringByAppendingPathComponent:@"filename"];
+operation.outputStream = [NSOutputStream outputStreamToFileAtPath:path append:NO];
+
+[operation setCompletionBlockWithSuccess:^(AFHTTPRequestOperation *operation, id responseObject) {
+    NSLog(@"Dosya başarıyla yüklendi:  %@", path);
+} failure:^(AFHTTPRequestOperation *operation, NSError *error) {
+    NSLog(@"Hata: %@", error);
+}];
+
+[operation start];</code></pre>
+					</section>
 				</section>
 
 				<section>
-					<h3>Offline Dosya Yükleme</h3>
+					<section>
+						<h3>Offline Dosya Yükleme</h3>
+					</section>
 				</section>
 
 				<section>
 					<h3>Sonuç</h3>
+					<ul>
+						<li class="fragment">Artık daha kompleks iOS uygulamaları yapılmaktadır</li>
+						<li class="fragment">Dosya Işlemleri birçok uygulamada mevcuttur</li>
+						<li class="fragment">Gerekli performans hileleri ve Multithread mantığı dosya işlemleri içinde mevcuttur</li>
+						<li class="fragment">Online ve Offline Dosya Aktarımı, dosya uygulamalarının olmazsa olmazıdır</li>
+					</ul>
 				</section>
 
 				<section>
-					<h3>Sorular!</h3>
+					<h2>Sorular!</h2>
 				</section>
 
 				<section>
