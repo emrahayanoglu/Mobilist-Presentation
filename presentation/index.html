@@ -1,0 +1,262 @@
+<!doctype html>
+<html lang="en">
+
+	<head>
+		<meta charset="utf-8">
+
+		<title>Mobilist 2013</title>
+
+		<meta name="description" content="A framework for easily creating beautiful presentations using HTML">
+		<meta name="author" content="Hakim El Hattab">
+
+		<meta name="apple-mobile-web-app-capable" content="yes" />
+		<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+
+		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+		<link rel="stylesheet" href="css/reveal.min.css">
+		<link rel="stylesheet" href="css/theme/default.css" id="theme">
+
+		<!-- For syntax highlighting -->
+		<link rel="stylesheet" href="lib/css/zenburn.css">
+
+		<!-- If the query includes 'print-pdf', use the PDF print sheet -->
+		<script>
+			document.write( '<link rel="stylesheet" href="css/print/' + ( window.location.search.match( /print-pdf/gi ) ? 'pdf' : 'paper' ) + '.css" type="text/css" media="print">' );
+		</script>
+
+		<!--[if lt IE 9]>
+		<script src="lib/js/html5shiv.js"></script>
+		<![endif]-->
+	</head>
+
+	<body>
+
+		<div class="reveal">
+
+			<!-- Any section element inside of this container is displayed as a slide -->
+			<div class="slides">
+
+				<section>
+					<h2>iOS Dosya Yönetim Sistemi ve Online/Offline Dosya Yükleme
+					</h2>
+					<p>
+						<small>Created by <a href="http://emrahayanoglu.com">Emrah Ayanoglu</a> / <a href="http://twitter.com/emrahayanoglu">@emrahayanoglu</a></small>
+					</p>
+				</section>
+
+				<section>
+					<h3>Konular</h3>
+					<ul>
+						<li class="fragment">EFB Projesi</li>
+						<li class="fragment">Basit Dosya İşlemleri</li>
+						<li class="fragment">Multithread iOS</li>
+						<li class="fragment">Online Dosya Yükleme</li>
+						<li class="fragment">Offline Dosya Yükleme</li>
+						<li class="fragment">Sonuç</li>
+					</ul>
+				</section>
+
+				<section>
+					<section>
+						<h3>EFB Projesi</h3>
+						<ul>
+							<li class="fragment">Pilotların yaşamlarını kolaylaştırmak amacıyla başlatıldı</li>
+							<li class="fragment">Dokumanların aktarımı ve bazı hesaplamalar iPad tarafında gerçekleştiriliyor</li>
+						</ul>
+					</section>
+					<section>
+						<h3>EFB Projesi</h3>
+						<img src="img/login_ss.PNG" width="400" height="600">
+					</section>
+					<section>
+						<h3>EFB Projesi</h3>
+						<img src="img/doc_ss.PNG" width="400" height="600">
+					</section>
+					<section>
+						<h3>EFB Projesi</h3>
+						<img src="img/chart_ss.PNG" width="400" height="600">
+					</section>
+				</section>
+
+				<section>
+					<section>
+						<h3>Dosya Islemleri</h3>
+						<p>NSFileManager oluşturmak</p>
+						<pre><code>NSFileManager *filemgr;
+filemgr = [NSFileManager defaultManager];</code></pre>
+						<p>Dosya Olup Olmama Kontrolu</p>
+						<pre><code>if ([filemgr fileExistsAtPath: @"/tmp/myfile.txt" ] == YES)
+        NSLog (@"File exists");
+else
+        NSLog (@"File not found");</code></pre>
+					</section>
+					<section>
+						<h3>Dosya Islemleri</h3>
+						<p>NSString'ten Dosya Olusturmak</p>
+						<pre><code>NSArray *paths = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES); 
+NSString *documentsDirectory = [paths objectAtIndex:0]; // Documents klasorune ulasmak
+NSError *error;
+BOOL succeed = [myString writeToFile:[documentsDirectory stringByAppendingPathComponent:@"myfile.txt"]
+      atomically:YES encoding:NSUTF8StringEncoding error:&error];
+if (!succeed){
+    // Error durumu
+}</code></pre>
+					</section>
+					<section>
+						<h3>Klasör Islemleri</h3>
+						<p>Uygulamanın Dokuman Klasorune Erisim</p>
+						<pre><code>NSArray *dirPaths;
+NSString *docsDir;
+dirPaths = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, 
+		NSUserDomainMask, YES);
+
+docsDir = [dirPaths objectAtIndex:0];</code></pre>
+					</section>
+					<section>
+						<h3>Klasör Islemleri</h3>
+						<p>Yeni Klasor Oluşturmak</p>
+						<pre><code>newDir = [docsDir stringByAppendingPathComponent:@"data"];
+if ([createDirectoryAtPath:newDir withIntermediateDirectories:YES attributes:nil error: NULL] == NO)
+{
+        // Klasor Olusturulamadi
+}</code></pre>
+						<p>Klasör Silmek</p>
+						<pre><code>newDir = [docsDir stringByAppendingPathComponent:@"data"];
+if ([filemgr removeItemAtPath: newDir error: nil] == NO)
+{
+       // Klasor Silinemedi
+}</code></pre>
+					</section>
+					<section>
+						<h3>Performans Hileleri</h3>
+						<ul>
+							<li>Ne kadar az dosya işlemleri yaparsanız o kadar iyi :)</li>
+							<li>Buffer Boyutu</li>
+	<pre><code>uint8_t *buffer = malloc(chunkSize * sizeof(uint8_t));                    
+do{
+	NSUInteger bytesCopied = [rep getBytes:buffer fromOffset:offset length:chunkSize error:nil];
+	offset += bytesCopied;
+	NSData *data = [[NSData alloc] initWithBytes:buffer length:bytesCopied];
+	[file writeData:data];
+} while(offset < length);</code></pre>
+							<li>Dosyayı sıralı olarak okuyun</li>
+							<li>ve tabiki Multithread !!!</li>
+						</ul>
+					</section>
+					<section>
+						<h3>UI Kutuphane Secenekleri</h3>
+						<p>PSStackedView</p>
+						<img src="img/psstackedview_ss.png" width="700" height="500">
+					</section>
+					<section>
+						<h3>Demo</h3>
+					</section>
+				</section>
+
+				<section>
+					<section>
+						<h3>Multithread iOS</h3>
+						<p>Multithread aynı anda birden çok işlemi gerçekleştiren yapıların, uygulamaların kullandığı yöntemdir</p>
+						<p>Peki Ne Zaman Kullanmalıyız?</p>
+						<ul>
+							<li class="fragment">Network Islemleri</li>
+							<li class="fragment">Dosya Islemleri</li>
+							<li class="fragment">Resim Islemleri</li>
+						</ul>
+					</section>
+					<section>
+						<h3>Multithread iOS</h3>
+						<p>Peki Hangi Kutuphaneleri Kullanabiliriz (iOS Native Libraries)</p>
+						<ul>
+							<li class="fragment">NSNotifications</li>
+							<li class="fragment">Grand Central Dispatch (*)</li>
+						</ul>
+					</section>
+					<section>
+						<h3>NSNotications</h3>
+						<p>Önce NSNotification oluşturarak yollayalım</p>
+						<pre><code>[[NSNotificationCenter defaultCenter] postNotificationName:
+@"org.mobilist.dataRead" object:self];
+</code></pre>
+						<p>viewDidLoad'un sonuna ekleyerek Asenkron olarak calıştırılabilir</p>
+						<pre><code>[[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(dataRead:) 
+name:@"org.mobilist.dataRead" object:nil];</code></pre>
+					</section>
+					<section>
+						<h3>Grand Central Dispatch</h3>
+						<p>Oncelikle ilgili header'i ekliyelim ve kuyruk yapımızı oluşturalım</p>
+						<pre><code>#import &lt;dispatch/dispatch.h&gt;
+dispatch_queue_t backgroundQueue;
+backgroundQueue = dispatch_queue_create("com.mobilist.dataRead.bqueue", NULL);</code></pre>
+						<p>Arka Thread'de calışacak olan kodu yazalım</p>
+						<pre><code>dispatch_async(backgroundQueue, ^(void) {
+    [self readDataFromURL:sourceURL];
+});</code></pre>
+						<p>UI Thread'de calışacak olan kodu yazalım</p>
+						<pre><code>dispatch_async(dispatch_get_main_queue(), ^(void) {
+    [delegate dataAvailable:data];
+});</code></pre>
+					</section>
+					<section>
+						<h3>Demo</h3>
+					</section>
+				</section>
+
+				<section>
+					<h3>Online Dosya Yükleme</h3>
+				</section>
+
+				<section>
+					<h3>Offline Dosya Yükleme</h3>
+				</section>
+
+				<section>
+					<h3>Sonuç</h3>
+				</section>
+
+				<section>
+					<h3>Sorular!</h3>
+				</section>
+
+				<section>
+					<h1>THE END</h1>
+					<h3>BY Emrah Ayanoglu</h3>
+				</section>
+
+			</div>
+
+		</div>
+
+		<script src="lib/js/head.min.js"></script>
+		<script src="js/reveal.min.js"></script>
+
+		<script>
+
+			// Full list of configuration options available here:
+			// https://github.com/hakimel/reveal.js#configuration
+			Reveal.initialize({
+				controls: true,
+				progress: true,
+				history: true,
+				center: true,
+
+				theme: Reveal.getQueryHash().theme, // available themes are in /css/theme
+				transition: Reveal.getQueryHash().transition || 'default', // default/cube/page/concave/zoom/linear/fade/none
+
+				// Optional libraries used to extend on reveal.js
+				dependencies: [
+					{ src: 'lib/js/classList.js', condition: function() { return !document.body.classList; } },
+					{ src: 'plugin/markdown/showdown.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+					{ src: 'plugin/markdown/markdown.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+					{ src: 'plugin/highlight/highlight.js', async: true, callback: function() { hljs.initHighlightingOnLoad(); } },
+					{ src: 'plugin/zoom-js/zoom.js', async: true, condition: function() { return !!document.body.classList; } },
+					{ src: 'plugin/notes/notes.js', async: true, condition: function() { return !!document.body.classList; } }
+					// { src: 'plugin/search/search.js', async: true, condition: function() { return !!document.body.classList; } }
+					// { src: 'plugin/remotes/remotes.js', async: true, condition: function() { return !!document.body.classList; } }
+				]
+			});
+		</script>
+
+	</body>
+</html>
