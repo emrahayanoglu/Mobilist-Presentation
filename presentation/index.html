@@ -306,6 +306,69 @@ operation.outputStream = [NSOutputStream outputStreamToFileAtPath:path append:NO
 				<section>
 					<section>
 						<h3>Offline Dosya Yükleme</h3>
+						<p>Neden Offline Dosya Yükleme</p>
+						<ul>
+							<li class="fragment">Yüksek Boyutlu Dosyalar</li>
+							<li class="fragment">3G Maliyeti</li>
+							<li class="fragment">Yüklemenin Uzun Sürmesi</li>
+						</ul>
+					</section>
+					<section>
+						<h3>iOS'a Nasıl Offline Dosya Yükleyeceğiz?</h3>
+						<img src="img/usb_process.png">
+					</section>
+					<section>
+						<h3>Hangi Tip Dosyalar ve Ozellikleri?</h3>
+						<ul>
+							<li>Resim Formatları(JPG,PNG,NEF)</li>
+							<li>Video Formatları</li>
+							<li>Dosyanın ismi 8 karakter olmalı</li>
+							<li>Dosyalar USB/SD Card'da DCIM klasörünün altında bulunmalı</li>
+						</ul>
+					</section>
+					<section>
+						<h3>Assets Library'deki Dosyaların Listelenmesi</h3>
+						<pre><code>ALAssetsLibrary *library = [[ALAssetsLibrary alloc] init];
+ALAssetsGroupEnumerationResultsBlock assetsEnumerator = ^(ALAsset *result, 
+	NSUInteger index, BOOL *stop) {
+    if(result==nil)
+        return;
+    ALAssetRepresentation *rep = [result defaultRepresentation];
+    NSString *fileName = rep.filename;
+    NSRange nefRange = [fileName rangeOfString:@".nef" options:NSCaseInsensitiveSearch];
+    NSRange ofpRange = [fileName rangeOfString:@"doc" options:NSCaseInsensitiveSearch];
+});
+ALAssetsLibraryGroupsEnumerationResultsBlock groupsEnumerator = ^(ALAssetsGroup *group, 
+	BOOL *stop) {
+    if(group){
+        [group setAssetsFilter:[ALAssetsFilter allPhotos]];
+        [group enumerateAssetsWithOptions:0 usingBlock:assetsEnumerator];
+    }
+    
+    if(!group){
+        [self loadFromUSB:listOfEFBDirectories];
+    }
+};
+ALAssetsLibraryAccessFailureBlock failHandler = ^(NSError *error) {
+    // handle error
+    NSLog(@"3");
+};
+[library enumerateGroupsWithTypes:ALAssetsGroupAll usingBlock:groupsEnumerator 
+	failureBlock:failHandler];
+						</code></pre>
+					</section>
+					<section>
+						<h3>Assets Library'den Dosyaların Alınması</h3>
+						<pre><code>NSUInteger offset = 0;                    
+do{
+    NSUInteger bytesCopied = [rep getBytes:buffer 
+    	fromOffset:offset length:chunkSize error:nil];
+    offset += bytesCopied;
+    NSData *data = [[NSData alloc] initWithBytes:buffer 
+    	length:bytesCopied];
+    [file writeData:data];
+} while(offset < length);
+                		</code></pre>
 					</section>
 				</section>
 
